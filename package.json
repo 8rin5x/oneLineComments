@@ -4,11 +4,30 @@
   "description": "html/css comment fix",
   "version": "0.9.1",
   "publisher": "8rin5x",
+  "author": {
+    "name": "8rin5x"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/8rin5x/oneLineComments"
+  },
+  "bugs": {
+    "url": "https://github.com/8rin5x/oneLineComments/issues"
+  },
   "engines": {
     "vscode": "^1.44.0"
   },
   "categories": [
     "Other"
+  ],
+  "keywords": [
+    "comment",
+    "html",
+    "css",
+    "web development",
+    "stylus",
+    "format"
   ],
   "activationEvents": [
     "onCommand:extension.oneLineComments.toggleLineComment",
@@ -16,6 +35,14 @@
     "onCommand:extension.oneLineComments.remLineComment"
   ],
   "main": "./src/extension.js",
+  "screenshots": [
+    {
+      "path": "images/nest-html.gif"
+    },
+    {
+      "path": "images/nest-css.gif"
+    }
+  ],
   "contributes": {
     "commands": [
       {
