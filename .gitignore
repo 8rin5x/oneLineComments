@@ -1,0 +1,10 @@
+node_modules
+.vscode/**
+.vscode-test/**
+test/**
+vsc-extension-quickstart.md
+**/jsconfig.json
+**/*.map
+**/.eslintrc.json
+.vscodeignore
+package-lock.json

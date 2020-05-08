@@ -1,0 +1,71 @@
+{
+  "name": "onelinecomments",
+  "displayName": "One Line Comments",
+  "description": "html/css comment fix",
+  "version": "0.9.0",
+  "publisher": "8rin5x",
+  "engines": {
+    "vscode": "^1.44.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:extension.oneLineComments.toggleLineComment",
+    "onCommand:extension.oneLineComments.addLineComment",
+    "onCommand:extension.oneLineComments.remLineComment"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension.oneLineComments.toggleLineComment",
+        "title": "Toggle Line Comment"
+      },
+      {
+        "command": "extension.oneLineComments.addLineComment",
+        "title": "Add Line Comment"
+      },
+      {
+        "command": "extension.oneLineComments.remLineComment",
+        "title": "Remove Line Comment"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "extension.oneLineComments.toggleLineComment",
+        "key": "ctrl+/",
+        "mac": "cmd+/",
+        "when": "editorTextFocus && !editorReadonly"
+      },
+      {
+        "command": "extension.oneLineComments.addLineComment",
+        "key": "ctrl+k ctrl+c",
+        "mac": "cmd+k ctrl+c",
+        "when": "editorTextFocus && !editorReadonly"
+      },
+      {
+        "command": "extension.oneLineComments.remLineComment",
+        "key": "ctrl+k ctrl+u",
+        "mac": "cmd+k ctrl+u",
+        "when": "editorTextFocus && !editorReadonly"
+      }
+    ]
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
+    "test": "node ./test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.44.0",
+    "@types/glob": "^7.1.1",
+    "@types/mocha": "^7.0.2",
+    "@types/node": "^13.11.0",
+    "eslint": "^6.8.0",
+    "glob": "^7.1.6",
+    "mocha": "^7.1.2",
+    "typescript": "^3.8.3",
+    "vscode-test": "^1.3.0"
+  }
+}
