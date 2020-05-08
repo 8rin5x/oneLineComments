@@ -122,12 +122,12 @@ class CommentReplace {
         "outer_start": "<!--",
         "outer_end": "-->",
         "inner_start": "<!~~",
-        "inner_end": "~~!>",
+        "inner_end": "~~>",
         "escaped": {
           "outer_start": "\\<\\!\\-\\-",
           "outer_end": "\\-\\-\\>",
           "inner_start": "\\<\\!\\~\\~",
-          "inner_end": "\\~\\~\\!\\>"
+          "inner_end": "\\~\\~\\>"
         }
       }
     }[this.lang]
