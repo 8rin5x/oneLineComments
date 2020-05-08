@@ -2,8 +2,8 @@
 
 All notable changes to the "comments" extension will be documented in this file.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
-
-## [Unreleased]
-
-- Initial release
+## [0.9.1]
+* Fixed comment behavior of blank lines
+* Change README
+## [0.9.0]
+* Initial release

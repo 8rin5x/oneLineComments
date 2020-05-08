@@ -2,7 +2,7 @@
   "name": "onelinecomments",
   "displayName": "One Line Comments",
   "description": "html/css comment fix",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "publisher": "8rin5x",
   "engines": {
     "vscode": "^1.44.0"
@@ -15,7 +15,7 @@
     "onCommand:extension.oneLineComments.addLineComment",
     "onCommand:extension.oneLineComments.remLineComment"
   ],
-  "main": "./extension.js",
+  "main": "./src/extension.js",
   "contributes": {
     "commands": [
       {
