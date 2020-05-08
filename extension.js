@@ -147,9 +147,6 @@ class CSS {
   addLineComment() {
     let lines = this.text.split(/\r\n|\r|\n/)
     for (let i = 0; i < lines.length; i++) {
-      if (lines[i] === "") {
-        continue
-      }
       // "/* string */" to "/~ string ~/"
       lines[i] = lines[i].replace(
         /^(.*?)\/\*(.*)\*\/(.*?)$/g,
