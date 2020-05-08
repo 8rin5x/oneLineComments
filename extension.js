@@ -130,6 +130,10 @@ class CSS {
     let lines = this.text.split(/\r\n|\r|\n/)
     let isAddComment = false
     for (let i = 0; i < lines.length; i++) {
+      // 空文字、スペース、タブのみの行は無視
+      if (lines[i].match(/^[\s\t]*$/g) !== null) {
+        continue
+      }
       // すべての行がコメント状態で無ければコメントにする
       if (lines[i].match(/^[\s\t]*\/\*.*\*\/.*?$/g) === null) {
         isAddComment = true
@@ -147,6 +151,11 @@ class CSS {
   addLineComment() {
     let lines = this.text.split(/\r\n|\r|\n/)
     for (let i = 0; i < lines.length; i++) {
+      // 空文字、スペース、タブのみの行は無視
+      if (lines[i].match(/^[\s\t]*$/g) !== null) {
+        continue
+      }
+
       // "/* string */" to "/~ string ~/"
       lines[i] = lines[i].replace(
         /^(.*?)\/\*(.*)\*\/(.*?)$/g,
@@ -169,7 +178,7 @@ class CSS {
       // "/* string */" to "string"
       // "/* /~ string ~/ */" to "/~ string ~/"
       lines[i] = lines[i].replace(
-        /^(.*?)\/\*\s?(.*[^\s])\s?\*\/(.*?)$/g,
+        /^(.*?)\/\*\s?(.*?)\s?\*\/(.*?)$/g,
         "$1$2$3"
       )
 
@@ -193,6 +202,10 @@ class HTML {
     let lines = this.text.split(/\r\n|\r|\n/)
     let isAddComment = false
     for (let i = 0; i < lines.length; i++) {
+      // 空文字、スペース、タブのみの行は無視
+      if (lines[i].match(/^[\s\t]*$/g) !== null) {
+        continue
+      }
       // すべての行がコメント状態の場合コメント解除
       if (lines[i].match(/^[\s\t]*<!--.*-->.*?$/g) === null) {
         isAddComment = true
@@ -210,6 +223,11 @@ class HTML {
   addLineComment() {
     let lines = this.text.split(/\r\n|\r|\n/)
     for (let i = 0; i < lines.length; i++) {
+      // 空文字、スペース、タブのみの行は無視
+      if (lines[i].match(/^[\s\t]*$/g) !== null) {
+        continue
+      }
+
       // "<!-- string -->" to "<!~~ string ~~>"
       lines[i] = lines[i].replace(
         /^(.*?)<!--(.*)-->(.*?)$/g,
@@ -232,7 +250,7 @@ class HTML {
       // "<!-- string -->" to "string"
       // "<!-- <!~~ string ~~> -->" to "<!~~ string ~~>"
       lines[i] = lines[i].replace(
-        /^(.*?)<!--\s?(.*[^\s])\s?-->(.*?)$/g,
+        /^(.*?)<!--\s?(.*?)\s?-->(.*?)$/g,
         "$1$2$3"
       )
 
