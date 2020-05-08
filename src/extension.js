@@ -73,15 +73,7 @@ class OneLineComments {
     this.base(
       "editor.action.commentLine",
       (text, lang) => {
-        switch (lang) {
-          case "css":
-            const css = new CSS(text)
-            return css.toggleLineComent()
-
-          case "html":
-            const html = new HTML(text)
-            return html.toggleLineComent()
-        }
+        return new CommentReplace(text, lang).toggleLineComent()
       }
     )
   }
@@ -90,15 +82,7 @@ class OneLineComments {
     this.base(
       "editor.action.addCommentLine",
       (text, lang) => {
-        switch (lang) {
-          case "css":
-            const css = new CSS(text)
-            return css.addLineComment()
-
-          case "html":
-            const html = new HTML(text)
-            return html.addLineComment()
-        }
+        return new CommentReplace(text, lang).addLineComment()
       }
     )
   }
@@ -107,26 +91,50 @@ class OneLineComments {
     this.base(
       "editor.action.removeCommentLine",
       (text, lang) => {
-        switch (lang) {
-          case "css":
-            const css = new CSS(text)
-            return css.remLineComment()
-
-          case "html":
-            const html = new HTML(text)
-            return html.remLineComment()
-        }
+        return new CommentReplace(text, lang).remLineComment()
       }
     )
   }
 }
 
-class CSS {
-  constructor(text) {
+class CommentReplace {
+  constructor(text, lang) {
     this.text = text
+    this.lang = lang
+  }
+
+  comment_tags() {
+    // 参照時にエスケープされるため二重エスケープにしている
+    return {
+      "css": {
+        "outer_start": "/*",
+        "outer_end": "*/",
+        "inner_start": "/~",
+        "inner_end": "~/",
+        "escaped": {
+          "outer_start": "\\/\\*",
+          "outer_end": "\\*\\/",
+          "inner_start": "\\/\\~",
+          "inner_end": "\\~\\/"
+        }
+      },
+      "html": {
+        "outer_start": "<!--",
+        "outer_end": "-->",
+        "inner_start": "<!~~",
+        "inner_end": "~~!>",
+        "escaped": {
+          "outer_start": "\\<\\!\\-\\-",
+          "outer_end": "\\-\\-\\>",
+          "inner_start": "\\<\\!\\~\\~",
+          "inner_end": "\\~\\~\\!\\>"
+        }
+      }
+    }[this.lang]
   }
 
   toggleLineComent() {
+    const cmt = this.comment_tags()
     let lines = this.text.split(/\r\n|\r|\n/)
     let isAddComment = false
     for (let i = 0; i < lines.length; i++) {
@@ -135,7 +143,9 @@ class CSS {
         continue
       }
       // すべての行がコメント状態で無ければコメントにする
-      if (lines[i].match(/^[\s\t]*\/\*.*\*\/.*?$/g) === null) {
+      if (lines[i].match(
+        new RegExp(`^[\\s\\t]*${cmt.escaped.outer_start}.*${cmt.escaped.outer_end}.*?$`, "g")
+      ) === null) {
         isAddComment = true
         break
       }
@@ -149,116 +159,40 @@ class CSS {
   }
 
   addLineComment() {
+    const cmt = this.comment_tags()
     let lines = this.text.split(/\r\n|\r|\n/)
     for (let i = 0; i < lines.length; i++) {
       // 空文字、スペース、タブのみの行は無視
       if (lines[i].match(/^[\s\t]*$/g) !== null) {
         continue
       }
-
-      // "/* string */" to "/~ string ~/"
+      // startOuterTag string endOuterTag -> startInnerTag string endInnerTag
       lines[i] = lines[i].replace(
-        /^(.*?)\/\*(.*)\*\/(.*?)$/g,
-        "$1/~$2~/$3"
+        new RegExp(`^(.*?)${cmt.escaped.outer_start}(.*?)${cmt.escaped.outer_end}(.*?)$`, "g"),
+        `$1${cmt.inner_start}$2${cmt.inner_end}$3`
       )
-
-      // "  string" to "  /* string */"
-      // "  /~ string ~/" to "  /* /~ string ~/ */"
+      // indent string -> indent startOuterTag string endOuterTag
       lines[i] = lines[i].replace(
         /^([\s\t]*)(.*?)$/g,
-        "$1/* $2 */"
+        `$1${cmt.outer_start} $2 ${cmt.outer_end}`
       )
     }
     return lines.join("\n")
   }
 
   remLineComment() {
+    const cmt = this.comment_tags()
     let lines = this.text.split(/\r\n|\r|\n/)
     for (let i = 0; i < lines.length; i++) {
-      // "/* string */" to "string"
-      // "/* /~ string ~/ */" to "/~ string ~/"
+      // startOuterTag string endOuterTag -> string
       lines[i] = lines[i].replace(
-        /^(.*?)\/\*\s?(.*?)\s?\*\/(.*?)$/g,
+        new RegExp(`^(.*?)${cmt.escaped.outer_start}\\s?(.*?)\\s?${cmt.escaped.outer_end}(.*?)$`, "g"),
         "$1$2$3"
       )
-
-      // "/~ string ~/" to "/* string */"
-      // "/~ /~ string ~/ ~/" to "/* /~ string ~/ */"
+      // startInnerTag string endInnerTag -> startOuterTag string endOuterTag
       lines[i] = lines[i].replace(
-        /^(.*?)\/\~(.*)\~\/(.*?)$/g,
-        "$1/*$2*/$3"
-      )
-    }
-    return lines.join("\n")
-  }
-}
-
-class HTML {
-  constructor(text) {
-    this.text = text
-  }
-
-  toggleLineComent() {
-    let lines = this.text.split(/\r\n|\r|\n/)
-    let isAddComment = false
-    for (let i = 0; i < lines.length; i++) {
-      // 空文字、スペース、タブのみの行は無視
-      if (lines[i].match(/^[\s\t]*$/g) !== null) {
-        continue
-      }
-      // すべての行がコメント状態の場合コメント解除
-      if (lines[i].match(/^[\s\t]*<!--.*-->.*?$/g) === null) {
-        isAddComment = true
-        break
-      }
-    }
-
-    if (isAddComment) {
-      return this.addLineComment()
-    } else {
-      return this.remLineComment()
-    }
-  }
-
-  addLineComment() {
-    let lines = this.text.split(/\r\n|\r|\n/)
-    for (let i = 0; i < lines.length; i++) {
-      // 空文字、スペース、タブのみの行は無視
-      if (lines[i].match(/^[\s\t]*$/g) !== null) {
-        continue
-      }
-
-      // "<!-- string -->" to "<!~~ string ~~>"
-      lines[i] = lines[i].replace(
-        /^(.*?)<!--(.*)-->(.*?)$/g,
-        "$1<!~~$2~~>$3"
-      )
-
-      // "  string" to "  <!-- string -->"
-      // "  <!~~ string ~~>" to "  <!-- <!~~ string ~~> -->"
-      lines[i] = lines[i].replace(
-        /^([\s\t]*)(.*?)$/g,
-        "$1<!-- $2 -->"
-      )
-    }
-    return lines.join("\n")
-  }
-
-  remLineComment() {
-    let lines = this.text.split(/\r\n|\r|\n/)
-    for (let i = 0; i < lines.length; i++) {
-      // "<!-- string -->" to "string"
-      // "<!-- <!~~ string ~~> -->" to "<!~~ string ~~>"
-      lines[i] = lines[i].replace(
-        /^(.*?)<!--\s?(.*?)\s?-->(.*?)$/g,
-        "$1$2$3"
-      )
-
-      // "<!~~ string ~~>" to "<!-- string -->"
-      // "<!~~ <!~~ string ~~> ~~>" to "<!-- <!~~ string ~~> -->"
-      lines[i] = lines[i].replace(
-        /^(.*?)<!~~(.*)~~>(.*?)$/g,
-        "$1<!--$2-->$3"
+        new RegExp(`^(.*?)${cmt.escaped.inner_start}(.*)${cmt.escaped.inner_end}(.*?)$`, "g"),
+        `$1${cmt.outer_start}$2${cmt.outer_end}$3`
       )
     }
     return lines.join("\n")
