@@ -4,7 +4,7 @@ All notable changes to the "comments" extension will be documented in this file.
 
 ## [1.0.2]
 
-Fixed to auto generate escaped tags
+* Fixed to auto generate escaped tags
 
 ## [1.0.1]
 
