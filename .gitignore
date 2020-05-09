@@ -8,3 +8,4 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 .vscodeignore
 package-lock.json
+**/*.vsix
