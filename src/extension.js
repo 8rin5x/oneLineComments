@@ -35,7 +35,7 @@ class OneLineComments {
     }
 
     const doc = editor.document
-    console.log(doc.languageId)
+
     if (new CommentTags(doc.languageId).getTags() === null) {
       vscode.commands.executeCommand(defaultCommand)
       return
