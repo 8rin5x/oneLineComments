@@ -104,33 +104,30 @@ class CommentReplace {
   }
 
   comment_tags() {
-    // 参照時にエスケープされるため二重エスケープにしている
-    return {
+    let tags = {
       "css": {
         "outer_start": "/*",
         "outer_end": "*/",
         "inner_start": "/~",
-        "inner_end": "~/",
-        "escaped": {
-          "outer_start": "\\/\\*",
-          "outer_end": "\\*\\/",
-          "inner_start": "\\/\\~",
-          "inner_end": "\\~\\/"
-        }
+        "inner_end": "~/"
       },
       "html": {
         "outer_start": "<!--",
         "outer_end": "-->",
         "inner_start": "<!~~",
-        "inner_end": "~~>",
-        "escaped": {
-          "outer_start": "\\<\\!\\-\\-",
-          "outer_end": "\\-\\-\\>",
-          "inner_start": "\\<\\!\\~\\~",
-          "inner_end": "\\~\\~\\>"
-        }
+        "inner_end": "~~>"
       }
     }[this.lang]
+
+    // エスケープ済みタグを追加
+    tags.escaped = {}
+    for (const key in tags) {
+      if (key === "escaped") {
+        continue
+      }
+      tags.escaped[key] = "\\" + tags[key].split("").join("\\")
+    }
+    return tags
   }
 
   toggleLineComent() {
