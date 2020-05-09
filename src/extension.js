@@ -35,13 +35,8 @@ class OneLineComments {
     }
 
     const doc = editor.document
-    const supported = [
-      "css",
-      "html"
-    ]
-
-    if (supported.indexOf(doc.languageId) === -1) {
-      // サポートしていなければ既存処理
+    console.log(doc.languageId)
+    if (new CommentTags(doc.languageId).getTags() === null) {
       vscode.commands.executeCommand(defaultCommand)
       return
     }
@@ -97,14 +92,15 @@ class OneLineComments {
   }
 }
 
-class CommentReplace {
-  constructor(text, lang) {
-    this.text = text
+class CommentTags {
+  constructor(lang) {
     this.lang = lang
   }
 
-  comment_tags() {
-    let tags = {
+  // 優先順位は、ユーザ設定 > デフォルトタグ > null
+  getTags() {
+    let resultTags
+    let defaultTags = {
       "css": {
         "outer_start": "/*",
         "outer_end": "*/",
@@ -119,19 +115,88 @@ class CommentReplace {
       }
     }[this.lang]
 
+    if (this.checkCommentTags(defaultTags)) {
+      resultTags = defaultTags
+    }
+
+    let customCommentTags = vscode.workspace.getConfiguration(
+      "oneLineComments.customCommentTags"
+    )[this.lang]
+
+    if (this.checkCommentTags(customCommentTags)) {
+      // customCommentTagsは読み取り専用なので新たに生成する必要があった
+      resultTags = {
+        "outer_start": customCommentTags.outer_start,
+        "outer_end": customCommentTags.outer_end,
+        "inner_start": customCommentTags.inner_start,
+        "inner_end": customCommentTags.inner_end
+      }
+    }
+
+    if (!this.checkCommentTags(resultTags)) {
+      return null
+    }
+
     // エスケープ済みタグを追加
-    tags.escaped = {}
-    for (const key in tags) {
+    resultTags.escaped = {}
+    for (const key in resultTags) {
       if (key === "escaped") {
         continue
       }
-      tags.escaped[key] = "\\" + tags[key].split("").join("\\")
+      resultTags.escaped[key] = "\\" + resultTags[key].split("").join("\\")
     }
-    return tags
+    return resultTags
+  }
+
+  checkCommentTags(tags) {
+    if (typeof tags !== "object") {
+      return false
+    }
+
+    const requiredItems = [
+      "outer_start",
+      "outer_end",
+      "inner_start",
+      "inner_end"
+    ]
+
+    for (const item of requiredItems) {
+      if (!tags.hasOwnProperty(item)) {
+        return false
+      }
+
+      const value = tags[item]
+      if (typeof value !== "string") {
+        return false
+      }
+
+      {
+        const minLength = 1
+        const maxLength = 5
+        if (value.length < minLength) {
+          return false
+        }
+        if (value.length > maxLength) {
+          return false
+        }
+      }
+
+      if (!(/^[!"#$%&'()\*\+\-\.,\/:;<=>?@\[\\\]^_`{|}~]+$/g).test(value)) {
+        return false
+      }
+    }
+    return true
+  }
+}
+
+class CommentReplace {
+  constructor(text, lang) {
+    this.text = text
+    this.lang = lang
   }
 
   toggleLineComent() {
-    const cmt = this.comment_tags()
+    const tags = new CommentTags(this.lang).getTags()
     let lines = this.text.split(/\r\n|\r|\n/)
     let isAddComment = false
     for (let i = 0; i < lines.length; i++) {
@@ -141,7 +206,7 @@ class CommentReplace {
       }
       // すべての行がコメント状態で無ければコメントにする
       if (lines[i].match(
-        new RegExp(`^[\\s\\t]*${cmt.escaped.outer_start}.*${cmt.escaped.outer_end}.*?$`, "g")
+        new RegExp(`^[\\s\\t]*${tags.escaped.outer_start}.*${tags.escaped.outer_end}.*?$`, "g")
       ) === null) {
         isAddComment = true
         break
@@ -156,7 +221,7 @@ class CommentReplace {
   }
 
   addLineComment() {
-    const cmt = this.comment_tags()
+    const tags = new CommentTags(this.lang).getTags()
     let lines = this.text.split(/\r\n|\r|\n/)
     for (let i = 0; i < lines.length; i++) {
       // 空文字、スペース、タブのみの行は無視
@@ -165,31 +230,31 @@ class CommentReplace {
       }
       // startOuterTag string endOuterTag -> startInnerTag string endInnerTag
       lines[i] = lines[i].replace(
-        new RegExp(`^(.*?)${cmt.escaped.outer_start}(.*?)${cmt.escaped.outer_end}(.*?)$`, "g"),
-        `$1${cmt.inner_start}$2${cmt.inner_end}$3`
+        new RegExp(`^(.*?)${tags.escaped.outer_start}(.*?)${tags.escaped.outer_end}(.*?)$`, "g"),
+        `$1${tags.inner_start}$2${tags.inner_end}$3`
       )
       // indent string -> indent startOuterTag string endOuterTag
       lines[i] = lines[i].replace(
         /^([\s\t]*)(.*?)$/g,
-        `$1${cmt.outer_start} $2 ${cmt.outer_end}`
+        `$1${tags.outer_start} $2 ${tags.outer_end}`
       )
     }
     return lines.join("\n")
   }
 
   remLineComment() {
-    const cmt = this.comment_tags()
+    const tags = new CommentTags(this.lang).getTags()
     let lines = this.text.split(/\r\n|\r|\n/)
     for (let i = 0; i < lines.length; i++) {
       // startOuterTag string endOuterTag -> string
       lines[i] = lines[i].replace(
-        new RegExp(`^(.*?)${cmt.escaped.outer_start}\\s?(.*?)\\s?${cmt.escaped.outer_end}(.*?)$`, "g"),
+        new RegExp(`^(.*?)${tags.escaped.outer_start}\\s?(.*?)\\s?${tags.escaped.outer_end}(.*?)$`, "g"),
         "$1$2$3"
       )
       // startInnerTag string endInnerTag -> startOuterTag string endOuterTag
       lines[i] = lines[i].replace(
-        new RegExp(`^(.*?)${cmt.escaped.inner_start}(.*)${cmt.escaped.inner_end}(.*?)$`, "g"),
-        `$1${cmt.outer_start}$2${cmt.outer_end}$3`
+        new RegExp(`^(.*?)${tags.escaped.inner_start}(.*)${tags.escaped.inner_end}(.*?)$`, "g"),
+        `$1${tags.outer_start}$2${tags.outer_end}$3`
       )
     }
     return lines.join("\n")

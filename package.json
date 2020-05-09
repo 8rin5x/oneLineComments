@@ -2,7 +2,7 @@
   "name": "onelinecomments",
   "displayName": "One Line Comments",
   "description": "html/css comment fix",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "publisher": "8rin5x",
   "author": {
     "name": "8rin5x"
@@ -41,6 +41,9 @@
     },
     {
       "path": "images/nest-css.gif"
+    },
+    {
+      "path": "images/settings.png"
     }
   ],
   "contributes": {
@@ -77,7 +80,30 @@
         "mac": "cmd+k ctrl+u",
         "when": "editorTextFocus && !editorReadonly"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "One Line Comments",
+      "properties": {
+        "oneLineComments.customCommentTags": {
+          "type": "object",
+          "description": "Set the comment tags of each language.\nComment tags are only 1 to 5 character symbols.",
+          "default": {
+            "html": {
+              "outer_start": "<!--",
+              "outer_end": "-->",
+              "inner_start": "<!~~",
+              "inner_end": "~~>"
+            },
+            "css": {
+              "outer_start": "/*",
+              "outer_end": "*/",
+              "inner_start": "/~",
+              "inner_end": "~/"
+            }
+          }
+        }
+      }
+    }
   },
   "scripts": {
     "lint": "eslint .",

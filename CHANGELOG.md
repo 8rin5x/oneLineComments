@@ -2,6 +2,11 @@
 
 All notable changes to the "comments" extension will be documented in this file.
 
+## [1.1.0]
+
+* Comment tags are now customizable
+* Change README
+
 ## [1.0.2]
 
 * Fixed to auto generate escaped tags

@@ -80,9 +80,18 @@ Select the commented or uncommented line to execute the command.
   * Mac: <kbd>cmd</kbd>+<kbd>k</kbd> <kbd>cmd</kbd>+<kbd>u</kbd>
   * Windows: <kbd>ctrl</kbd>+<kbd>k</kbd> <kbd>ctrl</kbd>+<kbd>u</kbd>
 
-## Extension Settings
+### Configuration
 
-The following languages are supported:
+* oneLineComments.customCommentTags
+  * You can add and edit comment tags
+  * rule
+    * Specify by [language ID](https://code.visualstudio.com/docs/languages/identifiers)
+    * Requires 4 items "outer_start", "outer_end", "inner_start", "inner_end"
+    * Comment tags are only 1 to 5 character symbols
+
+![settings.json example](images/settings.png)
+
+The following languages are supported by default:
 
 * html
 * css
