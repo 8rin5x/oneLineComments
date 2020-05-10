@@ -97,44 +97,23 @@ class CommentTags {
     this.lang = lang
   }
 
-  // 優先順位は、ユーザ設定 > デフォルトタグ > null
   getTags() {
     let resultTags
-    let defaultTags = {
-      "css": {
-        "outer_start": "/*",
-        "outer_end": "*/",
-        "inner_start": "/~",
-        "inner_end": "~/"
-      },
-      "html": {
-        "outer_start": "<!--",
-        "outer_end": "-->",
-        "inner_start": "<!~~",
-        "inner_end": "~~>"
-      }
-    }[this.lang]
-
-    if (this.checkCommentTags(defaultTags)) {
-      resultTags = defaultTags
-    }
 
     let customCommentTags = vscode.workspace.getConfiguration(
       "oneLineComments.customCommentTags"
     )[this.lang]
 
-    if (this.checkCommentTags(customCommentTags)) {
-      // customCommentTagsは読み取り専用なので新たに生成する必要があった
-      resultTags = {
-        "outer_start": customCommentTags.outer_start,
-        "outer_end": customCommentTags.outer_end,
-        "inner_start": customCommentTags.inner_start,
-        "inner_end": customCommentTags.inner_end
-      }
+    if (!this.checkCommentTags(customCommentTags)) {
+      return null
     }
 
-    if (!this.checkCommentTags(resultTags)) {
-      return null
+    // customCommentTagsは読み取り専用なので新たに生成する必要があった
+    resultTags = {
+      "outer_start": customCommentTags.outer_start,
+      "outer_end": customCommentTags.outer_end,
+      "inner_start": customCommentTags.inner_start,
+      "inner_end": customCommentTags.inner_end
     }
 
     // エスケープ済みタグを追加
@@ -182,6 +161,7 @@ class CommentTags {
       }
 
       if (!(/^[!"#$%&'()\*\+\-\.,\/:;<=>?@\[\\\]^_`{|}~]+$/g).test(value)) {
+        // 記号以外が含まれる
         return false
       }
     }
@@ -200,14 +180,13 @@ class CommentReplace {
     let lines = this.text.split(/\r\n|\r|\n/)
     let isAddComment = false
     for (let i = 0; i < lines.length; i++) {
-      // 空文字、スペース、タブのみの行は無視
-      if (lines[i].match(/^[\s\t]*$/g) !== null) {
+      if ((/^[\s\t]*$/g).test(lines[i])) {
+        // 空文字、スペース、タブのみ
         continue
       }
-      // すべての行がコメント状態で無ければコメントにする
-      if (lines[i].match(
-        new RegExp(`^[\\s\\t]*${tags.escaped.outer_start}.*${tags.escaped.outer_end}.*?$`, "g")
-      ) === null) {
+
+      if (!new RegExp(`^[\\s\\t]*${tags.escaped.outer_start}.*${tags.escaped.outer_end}.*?$`, "g").test(lines[i])) {
+        // コメント行じゃない
         isAddComment = true
         break
       }
@@ -224,10 +203,11 @@ class CommentReplace {
     const tags = new CommentTags(this.lang).getTags()
     let lines = this.text.split(/\r\n|\r|\n/)
     for (let i = 0; i < lines.length; i++) {
-      // 空文字、スペース、タブのみの行は無視
-      if (lines[i].match(/^[\s\t]*$/g) !== null) {
+      if ((/^[\s\t]*$/g).test(lines[i])) {
+        // 空文字、スペース、タブのみ
         continue
       }
+
       // startOuterTag string endOuterTag -> startInnerTag string endInnerTag
       lines[i] = lines[i].replace(
         new RegExp(`^(.*?)${tags.escaped.outer_start}(.*?)${tags.escaped.outer_end}(.*?)$`, "g"),
