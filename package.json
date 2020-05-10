@@ -2,7 +2,7 @@
   "name": "onelinecomments",
   "displayName": "One Line Comments",
   "description": "html/css comment fix",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "publisher": "8rin5x",
   "author": {
     "name": "8rin5x"
@@ -120,5 +120,8 @@
     "mocha": "^7.1.2",
     "typescript": "^3.8.3",
     "vscode-test": "^1.3.0"
+  },
+  "dependencies": {
+    "xregexp": "^4.3.0"
   }
 }

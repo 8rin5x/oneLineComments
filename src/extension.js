@@ -1,4 +1,5 @@
 const vscode = require("vscode")
+const XRegExp = require("xregexp")
 
 function activate(context) {
   context.subscriptions.push(
@@ -185,7 +186,7 @@ class CommentReplace {
         continue
       }
 
-      if (!new RegExp(`^[\\s\\t]*${tags.escaped.outer_start}.*${tags.escaped.outer_end}.*?$`, "g").test(lines[i])) {
+      if (!new RegExp(`${tags.escaped.outer_start}.*?${tags.escaped.outer_end}`, "g").test(lines[i])) {
         // コメント行じゃない
         isAddComment = true
         break
@@ -208,12 +209,14 @@ class CommentReplace {
         continue
       }
 
-      // startOuterTag string endOuterTag -> startInnerTag string endInnerTag
-      lines[i] = lines[i].replace(
-        new RegExp(`^(.*?)${tags.escaped.outer_start}(.*?)${tags.escaped.outer_end}(.*?)$`, "g"),
-        `$1${tags.inner_start}$2${tags.inner_end}$3`
+      lines[i] = this.replaceCorrespondingCharacter(
+        lines[i],
+        tags.escaped.outer_start,
+        tags.escaped.outer_end,
+        tags.inner_start,
+        tags.inner_end
       )
-      // indent string -> indent startOuterTag string endOuterTag
+
       lines[i] = lines[i].replace(
         /^([\s\t]*)(.*?)$/g,
         `$1${tags.outer_start} $2 ${tags.outer_end}`
@@ -226,18 +229,58 @@ class CommentReplace {
     const tags = new CommentTags(this.lang).getTags()
     let lines = this.text.split(/\r\n|\r|\n/)
     for (let i = 0; i < lines.length; i++) {
-      // startOuterTag string endOuterTag -> string
-      lines[i] = lines[i].replace(
-        new RegExp(`^(.*?)${tags.escaped.outer_start}\\s?(.*?)\\s?${tags.escaped.outer_end}(.*?)$`, "g"),
-        "$1$2$3"
+      lines[i] = this.replaceCorrespondingCharacter(
+        lines[i],
+        `${tags.escaped.outer_start}\\s?`,
+        `\\s?${tags.escaped.outer_end}`,
+        "",
+        ""
       )
-      // startInnerTag string endInnerTag -> startOuterTag string endOuterTag
-      lines[i] = lines[i].replace(
-        new RegExp(`^(.*?)${tags.escaped.inner_start}(.*)${tags.escaped.inner_end}(.*?)$`, "g"),
-        `$1${tags.outer_start}$2${tags.outer_end}$3`
+
+      lines[i] = this.replaceCorrespondingCharacter(
+        lines[i],
+        tags.escaped.inner_start,
+        tags.escaped.inner_end,
+        tags.outer_start,
+        tags.outer_end
       )
     }
     return lines.join("\n")
+  }
+
+  replaceCorrespondingCharacter(str, beforeLeftRegexPattern, beforeRightRegexPattern, afterLeft, afterRight) {
+    const matches = XRegExp.matchRecursive(
+      str,
+      beforeLeftRegexPattern,
+      beforeRightRegexPattern,
+      'g',
+      {
+        valueNames: [
+          'between',
+          'left',
+          'match',
+          'right'
+        ]
+      }
+    )
+
+    let result = ""
+    for (const match of matches) {
+      switch (match.name) {
+        case "between":
+          result += match.value
+          break
+        case "left":
+          result += afterLeft
+          break
+        case "match":
+          result += match.value
+          break
+        case "right":
+          result += afterRight
+      }
+    }
+    return result
   }
 }
 
